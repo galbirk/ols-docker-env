@@ -1,0 +1,136 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+spec:
+  selector:
+    matchLabels:
+      app: mysql-deployment
+  template:
+    metadata:
+      labels:
+        app: mysql-deployment
+    spec:
+      containers:
+      - name: mysql-deployment
+        image: mariadb:10.5.9
+        volumeMounts:
+          - mountPath: /var/lib/mysql
+            name: data
+            subPath: db
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: password
+          - name: MYSQL_DATABASE
+            value: wordpress
+          - name: MYSQL_PASSWORD
+            value: password
+          - name: MYSQL_USER
+            value: wordpress
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+          requests:
+            memory: "10Mi"
+            cpu: "100m"
+        ports:
+        - containerPort: 3306
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: wp-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ols-deployment
+spec:
+  selector:
+    matchLabels:
+      app: ols-deployment
+  template:
+    metadata:
+      labels:
+        app: ols-deployment
+    spec:
+      containers:
+      - name: ols-deployment
+        image: litespeedtech/openlitespeed:1.7.11-lsphp80
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        volumeMounts:
+          - name: ols-data
+            mountPath: /usr/local/lsws/conf
+            subPath: lsws/conf
+          - name: ols-data
+            mountPath: /usr/local/lsws/admin/conf
+            subPath: lsws/admin-conf
+          - name: ols-data
+            mountPath: /usr/local/bin
+            subPath: bin/container
+          - name: ols-data
+            mountPath: /var/www/vhosts/
+            subPath: sites
+          - name: ols-data
+            mountPath: /root/.acme.sh/
+            subPath: acme
+          - name: ols-data
+            mountPath: /usr/local/lsws/logs/
+            subPath: logs
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: password
+          - name: MYSQL_DATABASE
+            value: wordpress
+          - name: MYSQL_PASSWORD
+            value: password
+          - name: MYSQL_USER
+            value: wordpress
+          - name: TZ
+            value: "America/New_York"
+        ports:
+        - containerPort: 80
+          name: http
+        - containerPort: 443
+          name: https
+        - containerPort: 7080
+          name: admin
+      volumes:
+        - name: ols-data
+          persistentVolumeClaim:
+            claimName: wp-pvc
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pma-deployment
+spec:
+  selector:
+    matchLabels:
+      app: pma-deployment
+  template:
+    metadata:
+      labels:
+        app: pma-deployment
+    spec:
+      containers:
+      - name: pma-deployment
+        image: bitnami/phpmyadmin:5.0.2-debian-10-r72
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        env:
+          - name: DATABASE_HOST
+            value: mysql-svc
+        ports:
+        - containerPort: 80
+          name: http
+        - containerPort: 8443
+          name: httpsss
+
+        
+
