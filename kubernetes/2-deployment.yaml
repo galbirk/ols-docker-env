@@ -118,14 +118,18 @@ spec:
     spec:
       containers:
       - name: pma-deployment
-        image: bitnami/phpmyadmin:5.0.2-debian-10-r72
+        image: phpmyadmin/phpmyadmin
         resources:
           limits:
             memory: "128Mi"
             cpu: "500m"
         env:
-          - name: DATABASE_HOST
-            value: mysql-svc
+          - name: PMA_HOST
+            value: mysql-svc.default.svc.cluster.local
+          - name: PMA_PORT
+            value: "3306"
+          - name: MYSQL_ROOT_PASSWORD
+            value: password
         ports:
         - containerPort: 80
           name: http
