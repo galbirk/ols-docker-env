@@ -5,7 +5,7 @@ DOMAIN=''
 INSTALL=''
 UNINSTALL=''
 TYPE=0
-CONT_NAME='litespeed'
+CONT_NAME='ols-deployment-598665445c-bxjs6'
 ACME_SRC='https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh'
 EPACE='        '
 
@@ -72,7 +72,7 @@ email_filter(){
 
 cert_hook(){
     echo '[Start] Adding ACME hook'
-    docker-compose exec ${CONT_NAME} su -s /bin/bash -c "certhookctl.sh"
+    kubectl exec -it ${CONT_NAME} -- su -s /bin/bash -c "certhookctl.sh"
     echo '[End] Adding ACME hook'
 }
 
@@ -107,12 +107,12 @@ domain_verify(){
 install_acme(){
     echo '[Start] Install ACME'
     if [ "${1}" = 'true' ]; then
-        docker-compose exec litespeed su -c "cd; wget ${ACME_SRC}; chmod 755 acme.sh; \
+        kubectl exec -it ols-deployment-598665445c-bxjs6 -- su -c "cd; wget ${ACME_SRC}; chmod 755 acme.sh; \
         ./acme.sh --install --cert-home  ~/.acme.sh/certs; \
         rm ~/acme.sh"
     elif [ "${2}" != '' ]; then
         email_filter "${2}"
-        docker-compose exec litespeed su -c "cd; wget ${ACME_SRC}; chmod 755 acme.sh; \
+        kubectl exec -it ols-deployment-598665445c-bxjs6 -- su -c "cd; wget ${ACME_SRC}; chmod 755 acme.sh; \
         ./acme.sh --install --cert-home  ~/.acme.sh/certs --accountemail  ${2}; \
         rm ~/acme.sh"
     else
@@ -124,14 +124,14 @@ install_acme(){
 
 uninstall_acme(){
     echo '[Start] Uninstall ACME'
-    docker-compose exec ${CONT_NAME} su -c "~/.acme.sh/acme.sh --uninstall"
+    kubectl exec -it ${CONT_NAME} -- su -c "~/.acme.sh/acme.sh --uninstall"
     echo '[End] Uninstall ACME'
     exit 0
 }    
 
 check_acme(){
     echo '[Start] Checking ACME'
-    docker-compose exec ${CONT_NAME} su -c "test -f /root/.acme.sh/acme.sh"
+    kubectl exec -it ${CONT_NAME} -- su -c "test -f /root/.acme.sh/acme.sh"
     if [ ${?} != 0 ]; then
         install_acme "${NO_EMAIL}" "${EMAIL}"
         cert_hook
@@ -141,7 +141,7 @@ check_acme(){
 }
 
 lsws_restart(){
-    docker-compose exec ${CONT_NAME} su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
+    kubectl exec -it ${CONT_NAME} -- su -c '/usr/local/lsws/bin/lswsctrl restart >/dev/null'
 }
 
 doc_root_verify(){
@@ -150,7 +150,7 @@ doc_root_verify(){
     else
         DOC_PATH="${DOC_ROOT}"    
     fi
-    docker-compose exec ${CONT_NAME} su -c "[ -e ${DOC_PATH} ]"
+    kubectl exec -it ${CONT_NAME} -- su -c "[ -e ${DOC_PATH} ]"
     if [ ${?} -eq 0 ]; then
         echo -e "[O] The document root folder \033[32m${DOC_PATH}\033[0m does exist."
     else
@@ -162,9 +162,9 @@ doc_root_verify(){
 install_cert(){
     echo '[Start] Apply Lets Encrypt Certificate'
     if [ ${TYPE} = 1 ]; then
-        docker-compose exec ${CONT_NAME} su -c "/root/.acme.sh/acme.sh --issue -d ${1} -w ${DOC_PATH}"
+        kubectl exec -it ${CONT_NAME} -- su -c "/root/.acme.sh/acme.sh --issue -d ${1} -w ${DOC_PATH}"
     elif [ ${TYPE} = 2 ]; then
-        docker-compose exec ${CONT_NAME} su -c "/root/.acme.sh/acme.sh --issue -d ${1} -d www.${1} -w ${DOC_PATH}"
+        kubectl exec -it ${CONT_NAME} -- su -c "/root/.acme.sh/acme.sh --issue -d ${1} -d www.${1} -w ${DOC_PATH}"
     else
         echo 'unknown Type!'
         exit 2

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source .env
 APP_NAME='wordpress'
-CONT_NAME='litespeed'
+CONT_NAME='ols-deployment-598665445c-bxjs6'
 DOC_FD=''
 
 echow(){
@@ -71,7 +71,7 @@ EOT
 }
 
 app_download(){
-    docker-compose exec -T ${CONT_NAME} su -c "appinstallctl.sh --app ${1} --domain ${2}"
+    kubectl exec -it ${CONT_NAME} -- su -c "appinstallctl.sh --app ${1} --domain ${2}"
 }
 
 lsws_restart(){

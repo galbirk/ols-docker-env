@@ -27,7 +27,7 @@ check_input(){
 }
 
 app_download(){
-    docker-compose exec litespeed su -c "appinstallctl.sh --app ${1} --domain ${2}"
+    kubectl exec -it ols-deployment-598665445c-bxjs6 -- su -c "appinstallctl.sh --app ${1} --domain ${2}"
     bash bin/webadmin.sh -r
     exit 0
 }
